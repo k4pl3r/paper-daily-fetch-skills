@@ -1,20 +1,39 @@
 default_topic = "video-generation"
-lookback_days = 1
-limit = 3
 language = "zh-CN"
 image_strategy = "prefer-overview-otherwise-first"
-state_path = "../examples/state/seen.json"
 markdown_output_dir = "../examples/output"
+cache_dir = "~/.cache/paper-daily-fetch"
+
+[sources]
+enabled = ["hf-daily", "hf-trending", "arxiv-api", "arxiv-search"]
+timeout = 20
+retries = 2
+backoff_seconds = 1.0
+
+[discover]
+candidate_limit = 50
+
+[rank]
+final_limit = 3
+
+[history]
+path = "~/.cache/paper-daily-fetch/history/published.json"
+lookback_days = 14
 
 [openclaw]
 default_target = "paper-daily-chat"
 
 [topics.video-generation]
 keywords = ["video generation", "world model", "diffusion transformer"]
+negative_keywords = ["benchmark", "survey"]
+domain_boost_keywords = ["video", "world model", "transformer"]
 
 [topics.world-model]
 keywords = ["world model", "video prediction", "policy world model"]
+negative_keywords = ["benchmark", "survey"]
+domain_boost_keywords = ["embodied", "policy", "simulation"]
 
 [topics.3dgs-reconstruction]
 keywords = ["3dgs reconstruction", "gaussian splatting", "novel view synthesis"]
-
+negative_keywords = ["benchmark", "survey"]
+domain_boost_keywords = ["4k", "textured splatting", "pose-free"]

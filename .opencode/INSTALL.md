@@ -35,7 +35,7 @@ git clone https://github.com/k4pl3r/paper-daily-fetch-skills.git ~/.config/openc
 4. Verify that `opencode-paper-digest` is discoverable, then summarize:
    - clone path
    - configured skill path
-   - how to use the skill to render a markdown digest
+   - how to use `paper-daily-fetch pipeline daily` and `paper-daily-fetch render` to render a markdown digest
 
 ## Skill To Use
 
@@ -48,4 +48,3 @@ skills/opencode-paper-digest/SKILL.md
 ## If Something Fails
 
 Inspect the local OpenCode config format and adapt the registration step to its native discovery mechanism rather than assuming `skills.paths`.
-

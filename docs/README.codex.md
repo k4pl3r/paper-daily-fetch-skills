@@ -27,6 +27,5 @@ Restart Codex after creating the symlink.
 ## Example Request
 
 ```text
-Use the codex-paper-digest skill to fetch the latest video-generation papers and write the digest to ./reports/video-generation.md
+Use the codex-paper-digest skill to run paper-daily-fetch pipeline daily for video-generation and write the rendered markdown digest to ./reports/video-generation.md
 ```
-

@@ -1,17 +1,19 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from paper_daily_fetch.discovery import parse_arxiv_feed
-from paper_daily_fetch.ranking import rank_papers
+from paper_daily_fetch.pipeline.rank import rank_candidates
+from paper_daily_fetch.sources.arxiv_api import parse_arxiv_feed
 
 
-def test_rank_papers_prefers_phrase_hits_then_recency():
+def test_rank_candidates_prefers_phrase_hits_then_recency():
     xml_text = Path("tests/fixtures/collect_feed.xml").read_text()
     papers = parse_arxiv_feed(xml_text)
 
-    ranked = rank_papers(
+    ranked = rank_candidates(
         papers,
         keywords=["video generation", "world model", "3dgs reconstruction"],
+        negative_keywords=[],
+        domain_boost_keywords=[],
         limit=3,
         now=datetime(2026, 3, 29, 12, 0, tzinfo=timezone.utc),
     )
@@ -22,4 +24,3 @@ def test_rank_papers_prefers_phrase_hits_then_recency():
         "2603.00002v1",
     ]
     assert ranked[0].topic_matches == ["video generation", "world model"]
-

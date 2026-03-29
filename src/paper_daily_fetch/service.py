@@ -2,16 +2,14 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Callable
-from urllib.error import URLError
-from urllib.request import Request, urlopen
 
 from .config import AppConfig
-from .discovery import fetch_recent_arxiv_papers
-from .enrichment import arxiv_html_url, enrich_paper_links
-from .figures import select_figure
-from .models import FigureSelection, PaperRecord
-from .ranking import rank_papers
-from .state import SeenStateStore
+from .history import PublishHistoryStore
+from .infra.http import HttpClient, default_transport
+from .models import PaperRecord
+from .pipeline.discover import discover_candidates
+from .pipeline.enrich import enrich_candidates
+from .pipeline.rank import rank_candidates
 
 
 def collect_papers(
@@ -24,56 +22,39 @@ def collect_papers(
 ) -> dict[str, object]:
     selected_topic = topic_name or config.default_topic
     keywords = config.topic_keywords(selected_topic)
-    papers = fetch_recent_arxiv_papers(
+    negative_keywords = config.topic_negative_keywords(selected_topic)
+    domain_boost_keywords = config.topic_domain_boost_keywords(selected_topic)
+    client = HttpClient(
+        transport=(lambda url, timeout: http_get(url)) if http_get else default_transport,
+        retries=config.sources.retries,
+        backoff_seconds=config.sources.backoff_seconds,
+        timeout=config.sources.timeout,
+    )
+    discovered = discover_candidates(
+        topic_name=selected_topic,
         keywords=keywords,
         days=days or config.lookback_days,
-        http_get=http_get,
+        enabled_sources=config.sources.enabled,
+        http_client=client,
+        candidate_limit=config.discover.candidate_limit,
     )
-    ranked = rank_papers(papers, keywords=keywords, limit=limit or config.limit)
-    enriched = [_enrich_paper(paper, http_get=http_get) for paper in ranked]
-    state = SeenStateStore(config.state_path)
+    enriched = enrich_candidates(discovered, http_get=client.get_text)
+    ranked = rank_candidates(
+        enriched,
+        keywords=keywords,
+        negative_keywords=negative_keywords,
+        domain_boost_keywords=domain_boost_keywords,
+        limit=limit or config.rank.final_limit,
+    )
+    state = PublishHistoryStore(config.history.path)
     if include_seen:
-        visible = enriched
+        visible = ranked
     else:
-        visible_ids = set(state.filter_new([paper.arxiv_id for paper in enriched]))
-        visible = [paper for paper in enriched if paper.arxiv_id in visible_ids]
-        state.mark_seen(list(visible_ids))
+        visible_ids = set(state.filter_new([paper.arxiv_id for paper in ranked]))
+        visible = [paper for paper in ranked if paper.arxiv_id in visible_ids]
+        state.mark_published(list(visible_ids))
     return {
         "topic": selected_topic,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "papers": [paper.to_dict() for paper in visible],
     }
-
-
-def _enrich_paper(
-    paper: PaperRecord,
-    http_get: Callable[[str], str] | None = None,
-) -> PaperRecord:
-    fetch = http_get or _http_get
-    try:
-        paper = enrich_paper_links(paper, http_get=fetch)
-        html = fetch(arxiv_html_url(paper.paper_url))
-    except Exception:
-        return paper
-    figure = select_figure(html, base_url=arxiv_html_url(paper.paper_url))
-    if not figure:
-        return paper
-    return PaperRecord(
-        arxiv_id=paper.arxiv_id,
-        title=paper.title,
-        authors=paper.authors,
-        published_at=paper.published_at,
-        abstract=paper.abstract,
-        paper_url=paper.paper_url,
-        code_url=paper.code_url,
-        figure_url_or_path=figure.url,
-        figure_reason=figure.reason,
-        topic_matches=paper.topic_matches,
-    )
-
-
-def _http_get(url: str, timeout: int = 20) -> str:
-    request = Request(url, headers={"User-Agent": "paper-daily-fetch/0.1"})
-    with urlopen(request, timeout=timeout) as response:
-        return response.read().decode("utf-8", errors="replace")
-

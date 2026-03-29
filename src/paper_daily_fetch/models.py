@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 
@@ -22,6 +22,12 @@ class PaperRecord:
     figure_url_or_path: str | None
     figure_reason: str | None
     topic_matches: list[str]
+    source: str | None = None
+    sources: list[str] = field(default_factory=list)
+    canonical_url: str | None = None
+    institutions: list[str] = field(default_factory=list)
+    score: float | None = None
+    match_reason: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -39,5 +45,10 @@ class PaperRecord:
             figure_url_or_path=data.get("figure_url_or_path"),
             figure_reason=data.get("figure_reason"),
             topic_matches=list(data.get("topic_matches", [])),
+            source=data.get("source"),
+            sources=list(data.get("sources", [])),
+            canonical_url=data.get("canonical_url"),
+            institutions=list(data.get("institutions", [])),
+            score=data.get("score"),
+            match_reason=list(data.get("match_reason", [])),
         )
-

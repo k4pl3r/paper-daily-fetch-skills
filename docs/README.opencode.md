@@ -37,6 +37,5 @@ git clone https://github.com/k4pl3r/paper-daily-fetch-skills.git ~/.config/openc
 ## Example Request
 
 ```text
-Use the opencode-paper-digest skill to fetch the latest world-model papers and write the digest to ./reports/world-model.md
+Use the opencode-paper-digest skill to run paper-daily-fetch pipeline daily for world-model and write the rendered markdown digest to ./reports/world-model.md
 ```
-

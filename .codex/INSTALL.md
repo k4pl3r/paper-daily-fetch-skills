@@ -32,7 +32,7 @@ ln -s ~/.codex/paper-daily-fetch-skills/skills ~/.agents/skills/paper-daily-fetc
 4. Verify the install by checking that `codex-paper-digest` is discoverable, then summarize:
    - where the repo was cloned
    - where the skills symlink points
-   - how to use the Codex skill to generate a markdown digest
+   - how to use `paper-daily-fetch pipeline daily` and `paper-daily-fetch render` to generate a markdown digest
 
 ## Skill To Use
 
@@ -45,4 +45,3 @@ skills/codex-paper-digest/SKILL.md
 ## If Something Fails
 
 Inspect the current Codex skills directory, adjust the clone or symlink path to match the local environment, and report the exact change you made.
-

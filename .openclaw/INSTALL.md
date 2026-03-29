@@ -28,7 +28,7 @@ skills/openclaw-paper-digest/SKILL.md
 4. Verify the install by summarizing:
    - where the repository was placed
    - which OpenClaw mechanism was used to register the skill
-   - how to target a chat and request a paper digest
+   - how to target a chat and request a paper digest using `paper-daily-fetch pipeline daily` plus `paper-daily-fetch render --target openclaw`
 
 ## Installation Strategy
 
@@ -37,4 +37,3 @@ Prefer OpenClaw's native skill or extension registration flow. If there is no si
 ## If Something Fails
 
 Report the exact blocker, inspect the local OpenClaw install layout, and choose the nearest native pattern that successfully registers `openclaw-paper-digest`.
-

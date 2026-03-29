@@ -1,13 +1,13 @@
 # paper-daily-fetch-skills
 
-`paper-daily-fetch-skills` is a public skill repository for OpenClaw, Codex, Claude Code, and OpenCode. It helps agents discover fresh arXiv papers, keep only the most relevant ones for your topic keywords, attach a representative figure, and output either a push-ready OpenClaw message or a Markdown digest.
+`paper-daily-fetch-skills` is a public skill repository for OpenClaw, Codex, Claude Code, and OpenCode. It helps agents discover fresh papers from multiple sources, merge and enrich them, keep only the most relevant ones for your topic keywords, attach a representative figure, and output either a push-ready OpenClaw message or a Markdown digest.
 
 ## Why This Repo Exists
 
 - Track new papers for topics like video generation, world models, and 3D Gaussian Splatting
 - Keep the install flow lightweight for multiple agent tools
 - Separate public installation docs from the real skill logic in `skills/`
-- Reuse the same Python CLI and config across all supported tools
+- Reuse the same Python pipeline CLI and config across all supported tools
 
 ## Supported Agents
 
@@ -62,19 +62,27 @@ Fetch and follow instructions from https://raw.githubusercontent.com/k4pl3r/pape
 
 Default behavior:
 
-- arXiv-first retrieval
-- keyword-list topic matching
-- top 3 papers by default
+- multi-source retrieval: HuggingFace Daily / Trending + arXiv API + arXiv search fallback
+- keyword + negative keyword + domain boost ranking
+- top 3 papers by default after ranking
 - Chinese output
 - prefer overview/pipeline figure, then fallback to the first image
 
 ## What The Agent Can Do
 
 - Fetch recent papers for a configured topic
-- Rank papers by keyword and phrase match
+- Merge duplicate candidates from multiple sources
+- Rank papers by keyword, negative keyword, and domain boost match
 - Attach a code link when one is discoverable
 - Pick an overview, pipeline, framework, or fallback figure
 - Render a Markdown digest or OpenClaw-ready payload
+
+Pipeline stages:
+
+- `discover` for multi-source candidate collection
+- `enrich` for metadata, code link, and figure fallback
+- `rank` for final scoring and filtering
+- `render` for Markdown or OpenClaw output
 
 Example outputs:
 
@@ -109,7 +117,7 @@ Edit `config/paper_fetch.toml`.
 
 ### Where is the developer-facing CLI usage?
 
-The shared CLI lives in `src/paper_daily_fetch`. The homepage keeps install and usage simple; implementation details can stay in the code, examples, and tool-specific docs.
+The shared CLI lives in `src/paper_daily_fetch`. The homepage keeps install and usage simple; implementation details can stay in the code, examples, and tool-specific docs. The preferred CLI path is now `discover -> enrich -> rank -> render` or `pipeline daily` for a wrapped run.
 
 ## Updating
 

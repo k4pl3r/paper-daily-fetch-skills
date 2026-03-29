@@ -10,7 +10,7 @@ def test_skill_documents_exist_with_expected_entrypoints():
     }
     for skill_name, required_token in expectations.items():
         content = Path(f"skills/{skill_name}/SKILL.md").read_text()
-        assert "paper-daily-fetch collect" in content
+        assert "paper-daily-fetch discover" in content or "paper-daily-fetch pipeline daily" in content
         assert "paper-daily-fetch render" in content
         assert required_token in content
 

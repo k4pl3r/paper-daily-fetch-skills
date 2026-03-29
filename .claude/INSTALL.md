@@ -32,7 +32,7 @@ ln -s ~/.claude/paper-daily-fetch-skills/skills ~/.claude/skills/paper-daily-fet
 4. Verify that `claude-code-paper-digest` is discoverable, then summarize:
    - clone path
    - registered skills path
-   - how to use the skill to generate a markdown digest
+   - how to use `paper-daily-fetch pipeline daily` and `paper-daily-fetch render` to generate a markdown digest
 
 ## Skill To Use
 
@@ -45,4 +45,3 @@ skills/claude-code-paper-digest/SKILL.md
 ## If Something Fails
 
 Inspect the local Claude Code skill registration conventions and adapt the registration step to the native mechanism in that environment.
-
