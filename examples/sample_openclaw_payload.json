@@ -1,0 +1,24 @@
+{
+  "target_chat": "group-42",
+  "message": "今日论文速递：video-generation\n\n1. DreamWM: World Models for Controllable Video Generation\n   主题：video generation, world model\n   摘要：A world model improves controllable video generation quality.\n   论文：https://arxiv.org/abs/2603.00001v1\n   代码：https://github.com/example/dreamwm\n   配图：https://arxiv.org/figures/fig2.png",
+  "papers": [
+    {
+      "arxiv_id": "2603.00001v1",
+      "title": "DreamWM: World Models for Controllable Video Generation",
+      "authors": [
+        "Carol Example"
+      ],
+      "published_at": "2026-03-28T05:00:00+00:00",
+      "abstract": "A world model improves controllable video generation quality.",
+      "paper_url": "https://arxiv.org/abs/2603.00001v1",
+      "code_url": "https://github.com/example/dreamwm",
+      "figure_url_or_path": "https://arxiv.org/figures/fig2.png",
+      "figure_reason": "matched:overview",
+      "topic_matches": [
+        "video generation",
+        "world model"
+      ]
+    }
+  ]
+}
+

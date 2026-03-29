@@ -1,0 +1,24 @@
+{
+  "topic": "video-generation",
+  "generated_at": "2026-03-29T12:00:00+00:00",
+  "papers": [
+    {
+      "arxiv_id": "2603.00001v1",
+      "title": "DreamWM: World Models for Controllable Video Generation",
+      "authors": [
+        "Carol Example"
+      ],
+      "published_at": "2026-03-28T05:00:00+00:00",
+      "abstract": "A world model improves controllable video generation quality.",
+      "paper_url": "https://arxiv.org/abs/2603.00001v1",
+      "code_url": "https://github.com/example/dreamwm",
+      "figure_url_or_path": "https://arxiv.org/figures/fig2.png",
+      "figure_reason": "matched:overview",
+      "topic_matches": [
+        "video generation",
+        "world model"
+      ]
+    }
+  ]
+}
+

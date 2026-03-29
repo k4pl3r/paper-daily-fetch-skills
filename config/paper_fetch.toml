@@ -1,0 +1,20 @@
+default_topic = "video-generation"
+lookback_days = 1
+limit = 3
+language = "zh-CN"
+image_strategy = "prefer-overview-otherwise-first"
+state_path = "../examples/state/seen.json"
+markdown_output_dir = "../examples/output"
+
+[openclaw]
+default_target = "paper-daily-chat"
+
+[topics.video-generation]
+keywords = ["video generation", "world model", "diffusion transformer"]
+
+[topics.world-model]
+keywords = ["world model", "video prediction", "policy world model"]
+
+[topics.3dgs-reconstruction]
+keywords = ["3dgs reconstruction", "gaussian splatting", "novel view synthesis"]
+

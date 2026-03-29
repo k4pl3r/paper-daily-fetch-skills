@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <id>http://arxiv.org/abs/2603.00004v1</id>
+    <updated>2026-03-29T05:00:00Z</updated>
+    <published>2026-03-29T05:00:00Z</published>
+    <title>PipeVideo: A Pipeline for Video Generation with Autoregressive World Models</title>
+    <summary>We study video generation and world model planning with an efficient pipeline.</summary>
+    <author><name>Alice Example</name></author>
+    <author><name>Bob Example</name></author>
+    <link rel="alternate" href="https://arxiv.org/abs/2603.00004v1" />
+    <link title="pdf" href="https://arxiv.org/pdf/2603.00004v1" />
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.00001v1</id>
+    <updated>2026-03-28T05:00:00Z</updated>
+    <published>2026-03-28T05:00:00Z</published>
+    <title>DreamWM: World Models for Controllable Video Generation</title>
+    <summary>A new world model improves controllable video generation quality and temporal consistency.</summary>
+    <author><name>Carol Example</name></author>
+    <link rel="alternate" href="https://arxiv.org/abs/2603.00001v1" />
+    <link title="pdf" href="https://arxiv.org/pdf/2603.00001v1" />
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.00002v1</id>
+    <updated>2026-03-27T05:00:00Z</updated>
+    <published>2026-03-27T05:00:00Z</published>
+    <title>GaussianCity: 3DGS Reconstruction from Sparse Views</title>
+    <summary>We present a 3DGS reconstruction system for urban scene capture from sparse-view images.</summary>
+    <author><name>Dan Example</name></author>
+    <link rel="alternate" href="https://arxiv.org/abs/2603.00002v1" />
+    <link title="pdf" href="https://arxiv.org/pdf/2603.00002v1" />
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.00003v1</id>
+    <updated>2026-03-25T05:00:00Z</updated>
+    <published>2026-03-25T05:00:00Z</published>
+    <title>NoiseBench: Benchmarking Diffusion Noise Schedules</title>
+    <summary>This benchmark studies diffusion noise schedules without focusing on the target topics.</summary>
+    <author><name>Eve Example</name></author>
+    <link rel="alternate" href="https://arxiv.org/abs/2603.00003v1" />
+    <link title="pdf" href="https://arxiv.org/pdf/2603.00003v1" />
+  </entry>
+</feed>
+
