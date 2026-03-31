@@ -82,6 +82,7 @@ Pipeline stages:
 - `discover` for multi-source candidate collection
 - `enrich` for metadata, code link, and figure fallback
 - `rank` for final scoring and filtering
+- `annotate` for a host-agent-generated full Chinese translation of each abstract plus positive and critical takes
 - `render` for Markdown or OpenClaw output
 
 Example outputs:
@@ -117,7 +118,7 @@ Edit `config/paper_fetch.toml`.
 
 ### Where is the developer-facing CLI usage?
 
-The shared CLI lives in `src/paper_daily_fetch`. The homepage keeps install and usage simple; implementation details can stay in the code, examples, and tool-specific docs. The preferred CLI path is now `discover -> enrich -> rank -> render` or `pipeline daily` for a wrapped run.
+The shared CLI lives in `src/paper_daily_fetch`. The homepage keeps install and usage simple; implementation details can stay in the code, examples, and tool-specific docs. The preferred CLI path is now `discover -> enrich -> rank -> annotate -> render` or `pipeline daily` plus an explicit annotation step.
 
 ## Updating
 

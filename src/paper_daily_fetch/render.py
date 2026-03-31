@@ -10,11 +10,14 @@ def render_openclaw_payload(
 ) -> dict[str, object]:
     lines = [f"今日论文速递：{topic_name}", ""]
     for index, paper in enumerate(papers, start=1):
+        summary = paper.summary_zh or paper.abstract
         lines.extend(
             [
                 f"{index}. {paper.title}",
                 f"   主题：{', '.join(paper.topic_matches) if paper.topic_matches else '未命中'}",
-                f"   摘要：{paper.abstract}",
+                f"   摘要：{summary}",
+                f"   贡献：{paper.positive_take or '待补充'}",
+                f"   锐评：{paper.critical_take or '待补充'}",
                 f"   论文：{paper.paper_url}",
                 f"   代码：{paper.code_url or '暂无'}",
                 f"   配图：{paper.figure_url_or_path or '暂无'}",
@@ -41,6 +44,7 @@ def render_markdown(
         "",
     ]
     for paper in papers:
+        summary = paper.summary_zh or paper.abstract
         lines.extend(
             [
                 f"## {paper.title}",
@@ -61,6 +65,7 @@ def render_markdown(
             lines.append(f"- 配图说明：{paper.figure_reason}")
         else:
             lines.append("- 配图说明：暂无")
-        lines.extend(["", "### 原始摘要", "", paper.abstract])
+        lines.extend(["", "### 中文摘要", "", summary])
+        lines.extend(["", "### 一句话总结贡献（正面）", "", paper.positive_take or "待由宿主 Agent 补充"])
+        lines.extend(["", "### 毒舌锐评和其他方法的差异与不足（负面）", "", paper.critical_take or "待由宿主 Agent 补充"])
     return "\n".join(lines) + "\n"
-

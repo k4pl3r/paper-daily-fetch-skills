@@ -17,7 +17,8 @@ Use the shared `paper-daily-fetch` pipeline CLI to discover, enrich, rank, and t
 ## Commands
 ```bash
 paper-daily-fetch pipeline daily --config config/paper_fetch.toml --topic <topic> --days <days> --limit <limit> --include-seen --output /tmp/rank.json
-paper-daily-fetch render --target markdown --input /tmp/rank.json --output <output_path>
+paper-daily-fetch annotate --input /tmp/rank.json --annotations /tmp/annotations.json --output /tmp/annotated.json
+paper-daily-fetch render --target markdown --input /tmp/annotated.json --output <output_path>
 ```
 
 For step-by-step debugging:
@@ -26,10 +27,12 @@ For step-by-step debugging:
 paper-daily-fetch discover --config config/paper_fetch.toml --topic <topic> --days <days> --output /tmp/discover.json
 paper-daily-fetch enrich --config config/paper_fetch.toml --input /tmp/discover.json --output /tmp/enrich.json
 paper-daily-fetch rank --config config/paper_fetch.toml --topic <topic> --input /tmp/enrich.json --limit <limit> --output /tmp/rank.json
-paper-daily-fetch render --target markdown --input /tmp/rank.json --output <output_path>
+paper-daily-fetch annotate --input /tmp/rank.json --annotations /tmp/annotations.json --output /tmp/annotated.json
+paper-daily-fetch render --target markdown --input /tmp/annotated.json --output <output_path>
 ```
 
 ## Required Behavior
 - Keep the output in Chinese unless the user explicitly overrides it.
+- Before `render`, automatically create `/tmp/annotations.json` with a faithful Chinese translation of each abstract plus the positive and critical one-liners.
 - Use `output_path` as the final artifact path.
 - For manual runs, prefer `--include-seen` so the digest is reproducible.

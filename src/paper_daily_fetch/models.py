@@ -22,6 +22,9 @@ class PaperRecord:
     figure_url_or_path: str | None
     figure_reason: str | None
     topic_matches: list[str]
+    summary_zh: str | None = None
+    positive_take: str | None = None
+    critical_take: str | None = None
     source: str | None = None
     sources: list[str] = field(default_factory=list)
     canonical_url: str | None = None
@@ -40,6 +43,9 @@ class PaperRecord:
             authors=list(data.get("authors", [])),
             published_at=data["published_at"],
             abstract=data["abstract"],
+            summary_zh=data.get("summary_zh"),
+            positive_take=data.get("positive_take"),
+            critical_take=data.get("critical_take"),
             paper_url=data["paper_url"],
             code_url=data.get("code_url"),
             figure_url_or_path=data.get("figure_url_or_path"),

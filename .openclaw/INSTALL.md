@@ -28,7 +28,7 @@ skills/openclaw-paper-digest/SKILL.md
 4. Verify the install by summarizing:
    - where the repository was placed
    - which OpenClaw mechanism was used to register the skill
-   - how to target a chat and request a paper digest using `paper-daily-fetch pipeline daily` plus `paper-daily-fetch render --target openclaw`
+   - how to target a chat and request a paper digest using `paper-daily-fetch pipeline daily`, then generate `/tmp/annotations.json` with a full Chinese translation for each abstract plus `positive_take` and `critical_take`, then run `paper-daily-fetch annotate` and `paper-daily-fetch render --target openclaw`
 
 ## Installation Strategy
 

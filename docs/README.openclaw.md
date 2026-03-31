@@ -26,5 +26,5 @@ OpenClaw support in this repository is intentionally prompt-driven. If the one-l
 ## Example Request
 
 ```text
-Use the openclaw-paper-digest skill to run paper-daily-fetch pipeline daily for video-generation and prepare a rendered OpenClaw digest for target_chat=paper-daily-chat
+Use the openclaw-paper-digest skill to fetch papers for video-generation, automatically produce a full Chinese translation for each abstract plus positive and critical one-liners, and prepare a rendered OpenClaw digest for target_chat=paper-daily-chat
 ```

@@ -8,6 +8,7 @@ from urllib.request import Request, urlopen
 
 
 Transport = Callable[[str, int], str]
+BinaryTransport = Callable[[str, int], bytes]
 
 
 def default_transport(url: str, timeout: int) -> str:
@@ -16,19 +17,32 @@ def default_transport(url: str, timeout: int) -> str:
         return response.read().decode("utf-8", errors="replace")
 
 
+def default_binary_transport(url: str, timeout: int) -> bytes:
+    request = Request(url, headers={"User-Agent": "paper-daily-fetch/0.2"})
+    with urlopen(request, timeout=timeout) as response:
+        return response.read()
+
+
 @dataclass(slots=True)
 class HttpClient:
     transport: Transport = default_transport
+    binary_transport: BinaryTransport = default_binary_transport
     retries: int = 2
     backoff_seconds: float = 1.0
     timeout: int = 20
 
     def get_text(self, url: str) -> str:
+        return self._request(lambda: self.transport(url, self.timeout))
+
+    def get_bytes(self, url: str) -> bytes:
+        return self._request(lambda: self.binary_transport(url, self.timeout))
+
+    def _request(self, operation):
         last_error: Exception | None = None
         attempts = self.retries + 1
         for attempt in range(attempts):
             try:
-                return self.transport(url, self.timeout)
+                return operation()
             except HTTPError as exc:
                 last_error = exc
                 if attempt >= self.retries or exc.code not in {429, 500, 502, 503, 504}:

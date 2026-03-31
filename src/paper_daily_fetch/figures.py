@@ -64,11 +64,11 @@ def extract_pdf_candidates(pdf_path: str | Path) -> list[FigureSelection]:
 
 def _extract_html_candidates(html: str, base_url: str) -> list[dict[str, str]]:
     figures: list[dict[str, str]] = []
+    saw_figure = False
+    skipped_svg_with_hint = False
     for match in re.finditer(r"<figure\b.*?</figure>", html, flags=re.IGNORECASE | re.DOTALL):
+        saw_figure = True
         block = match.group(0)
-        img_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', block, flags=re.IGNORECASE)
-        if not img_match:
-            continue
         caption_match = re.search(
             r"<figcaption\b[^>]*>(.*?)</figcaption>",
             block,
@@ -79,6 +79,15 @@ def _extract_html_candidates(html: str, base_url: str) -> list[dict[str, str]]:
             caption = re.sub(r"<[^>]+>", " ", caption_match.group(1))
         caption = " ".join(unescape(caption).split()).lower()
         matched_hint = next((hint for hint in CAPTION_HINTS if hint in caption), "")
+        # arXiv sometimes renders architecture diagrams as composite SVG figures with nested
+        # thumbnails inside <foreignObject>. Using the first nested <img> produces a misleading crop.
+        # Let PDF fallback handle these composite figures instead.
+        if "<svg" in block.lower():
+            skipped_svg_with_hint = skipped_svg_with_hint or bool(matched_hint)
+            continue
+        img_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', block, flags=re.IGNORECASE)
+        if not img_match:
+            continue
         figures.append(
             {
                 "url": urljoin(base_url, img_match.group(1)),
@@ -87,7 +96,11 @@ def _extract_html_candidates(html: str, base_url: str) -> list[dict[str, str]]:
             }
         )
     if figures:
+        if skipped_svg_with_hint and not any(candidate["matched_hint"] for candidate in figures):
+            return []
         return figures
+    if saw_figure:
+        return []
 
     img_matches = re.findall(r'<img[^>]+src=["\']([^"\']+)["\']', html, flags=re.IGNORECASE)
     return [

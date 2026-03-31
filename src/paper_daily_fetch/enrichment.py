@@ -4,6 +4,7 @@ from dataclasses import replace
 import re
 from typing import Callable
 from urllib.parse import quote_plus, urljoin
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from .models import PaperRecord
@@ -33,10 +34,19 @@ def enrich_links(
 def enrich_paper_links(
     paper: PaperRecord,
     http_get: Callable[[str], str] | None = None,
+    arxiv_abs_html: str | None = None,
+    arxiv_html: str | None = None,
 ) -> PaperRecord:
     fetch = http_get or _http_get
-    arxiv_html = fetch(arxiv_html_url(paper.paper_url))
-    code_url = _find_code_url(arxiv_html)
+    abs_html = arxiv_abs_html
+    if abs_html is None:
+        abs_html = fetch(paper.paper_url)
+    code_url = _find_code_url(abs_html)
+    html_page = arxiv_html
+    if not code_url:
+        if html_page is None:
+            html_page = fetch(arxiv_html_url(paper.paper_url))
+        code_url = _find_code_url(html_page)
     if code_url:
         return replace(paper, code_url=code_url)
     pwc_search_url = f"{PWC_BASE_URL}/search?q={quote_plus(paper.title)}"
@@ -54,21 +64,29 @@ def arxiv_html_url(paper_url: str) -> str:
 
 
 def _find_code_url(html: str) -> str | None:
-    links = re.findall(
+    links = re.finditer(
         r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
         html,
         flags=re.IGNORECASE | re.DOTALL,
     )
     prioritized: list[str] = []
     fallbacks: list[str] = []
-    for href, label in links:
+    for match in links:
+        href, label = match.groups()
         href = href.strip()
         label_text = re.sub(r"<[^>]+>", " ", label).lower()
-        if any(host in href for host in CODE_HOST_HINTS):
-            if any(token in label_text for token in ("code", "github", "official", "project")):
-                prioritized.append(href)
-            else:
-                fallbacks.append(href)
+        if not any(host in href for host in CODE_HOST_HINTS):
+            continue
+        if _is_excluded_link(href):
+            continue
+        context = _normalize_text(
+            html[max(0, match.start() - 120): min(len(html), match.end() + 120)]
+        )
+        if any(token in context or token in label_text for token in ("code", "github", "official", "project", "repo", "implementation", "weights", "checkpoint", "model")):
+            prioritized.append(href)
+            continue
+        if _is_code_host_fallback(href):
+            fallbacks.append(href)
     if prioritized:
         return prioritized[0]
     if fallbacks:
@@ -82,3 +100,25 @@ def _extract_first_pwc_paper_path(html: str) -> str | None:
         return None
     return match.group(1)
 
+
+def _normalize_text(text: str) -> str:
+    return " ".join(re.sub(r"<[^>]+>", " ", text).lower().split())
+
+
+def _is_code_host_fallback(href: str) -> bool:
+    parsed = urlparse(href)
+    host = parsed.netloc.lower()
+    path = parsed.path.strip("/")
+    if any(domain in host for domain in ("github.com", "gitlab.com", "bitbucket.org")):
+        return bool(path and "/" in path)
+    if "huggingface.co" in host:
+        if not path or path in {"huggingface", "docs", "docs/hub", "docs/hub/spaces"}:
+            return False
+        return path.count("/") >= 1
+    return False
+
+
+def _is_excluded_link(href: str) -> bool:
+    parsed = urlparse(href)
+    path = parsed.path.lower()
+    return any(token in path for token in ("/issues", "/pull/", "/pulls", "/discussions", "/wiki/"))

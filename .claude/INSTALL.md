@@ -32,7 +32,7 @@ ln -s ~/.claude/paper-daily-fetch-skills/skills ~/.claude/skills/paper-daily-fet
 4. Verify that `claude-code-paper-digest` is discoverable, then summarize:
    - clone path
    - registered skills path
-   - how to use `paper-daily-fetch pipeline daily` and `paper-daily-fetch render` to generate a markdown digest
+   - how to use `paper-daily-fetch pipeline daily`, then generate `/tmp/annotations.json` with a full Chinese translation for each abstract plus `positive_take` and `critical_take`, then run `paper-daily-fetch annotate` and `paper-daily-fetch render` to generate a markdown digest
 
 ## Skill To Use
 

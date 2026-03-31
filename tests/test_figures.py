@@ -1,28 +1,27 @@
-from pathlib import Path
-
 from paper_daily_fetch.figures import select_figure_from_html
 
 
-def test_select_figure_prefers_overview_caption():
-    html = Path("tests/fixtures/arxiv_page_with_code_and_figures.html").read_text()
-
-    figure = select_figure_from_html(
-        html,
-        base_url="https://arxiv.org/html/2603.00001v1",
+def test_select_figure_from_html_ignores_nested_images_in_svg_composites():
+    html = (
+        '<figure>'
+        '<svg><foreignObject><img src="images/preview.png" /></foreignObject></svg>'
+        '<figcaption>Overview of PiJEPA.</figcaption>'
+        '</figure>'
     )
 
-    assert figure.url == "https://arxiv.org/figures/fig2.png"
-    assert figure.reason == "matched:overview"
+    assert select_figure_from_html(html, "https://arxiv.org/html/2603.25981v1/") is None
 
 
-def test_select_figure_falls_back_to_first_image():
-    html = Path("tests/fixtures/arxiv_page_without_code.html").read_text()
-
-    figure = select_figure_from_html(
-        html,
-        base_url="https://arxiv.org/html/2603.00001v1",
+def test_select_figure_from_html_prefers_pdf_fallback_over_unrelated_later_images():
+    html = (
+        '<figure>'
+        '<svg><foreignObject><img src="images/preview.png" /></foreignObject></svg>'
+        '<figcaption>Overview of PiJEPA.</figcaption>'
+        '</figure>'
+        '<figure>'
+        '<img src="images/frame_00.png" />'
+        '<figcaption>Qualitative trajectory comparison.</figcaption>'
+        '</figure>'
     )
 
-    assert figure.url == "https://arxiv.org/figures/fig0.png"
-    assert figure.reason == "fallback:first-image"
-
+    assert select_figure_from_html(html, "https://arxiv.org/html/2603.25981v1/") is None

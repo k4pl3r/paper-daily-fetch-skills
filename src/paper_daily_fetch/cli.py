@@ -7,6 +7,7 @@ import sys
 
 from .config import load_config
 from .models import PaperRecord
+from .pipeline.annotate import apply_annotations
 from .pipeline.discover import discover_candidates
 from .pipeline.enrich import enrich_candidates
 from .pipeline.rank import rank_candidates
@@ -39,6 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
     rank.add_argument("--limit", type=int)
     rank.add_argument("--config", default=str(DEFAULT_CONFIG_PATH))
     rank.add_argument("--output")
+
+    annotate = subparsers.add_parser("annotate")
+    annotate.add_argument("--input", required=True)
+    annotate.add_argument("--annotations", required=True)
+    annotate.add_argument("--config", default=str(DEFAULT_CONFIG_PATH))
+    annotate.add_argument("--output")
 
     pipeline = subparsers.add_parser("pipeline")
     pipeline_subparsers = pipeline.add_subparsers(dest="pipeline_command", required=True)
@@ -105,7 +112,12 @@ def enrich_command(args: argparse.Namespace) -> dict[str, object]:
         timeout=config.sources.timeout,
     )
     papers = [PaperRecord.from_dict(item) for item in payload.get("papers", [])]
-    enriched = enrich_candidates(papers, http_get=client.get_text)
+    enriched = enrich_candidates(
+        papers,
+        http_get=client.get_text,
+        http_get_bytes=client.get_bytes,
+        cache_dir=config.cache_dir,
+    )
     return {
         "topic": payload.get("topic", config.default_topic),
         "generated_at": payload.get("generated_at", _now()),
@@ -132,6 +144,19 @@ def rank_command(args: argparse.Namespace) -> dict[str, object]:
     }
 
 
+def annotate_command(args: argparse.Namespace) -> dict[str, object]:
+    config = load_config(args.config)
+    payload = _read_payload(args.input)
+    annotations_payload = _read_payload(args.annotations)
+    papers = [PaperRecord.from_dict(item) for item in payload.get("papers", [])]
+    annotated = apply_annotations(papers, annotations_payload.get("papers", []))
+    return {
+        "topic": payload.get("topic", config.default_topic),
+        "generated_at": payload.get("generated_at", _now()),
+        "papers": [paper.to_dict() for paper in annotated],
+    }
+
+
 def pipeline_daily_command(args: argparse.Namespace) -> dict[str, object]:
     config = load_config(args.config)
     topic = args.topic or config.default_topic
@@ -153,7 +178,12 @@ def pipeline_daily_command(args: argparse.Namespace) -> dict[str, object]:
         http_client=client,
         candidate_limit=config.discover.candidate_limit,
     )
-    enriched = enrich_candidates(discovered, http_get=client.get_text)
+    enriched = enrich_candidates(
+        discovered,
+        http_get=client.get_text,
+        http_get_bytes=client.get_bytes,
+        cache_dir=config.cache_dir,
+    )
     ranked = rank_candidates(
         enriched,
         keywords=config.topic_keywords(topic),
@@ -203,6 +233,8 @@ def main(argv: list[str] | None = None) -> int:
         return _emit_json_or_write(enrich_command(args), args.output)
     if args.command == "rank":
         return _emit_json_or_write(rank_command(args), args.output)
+    if args.command == "annotate":
+        return _emit_json_or_write(annotate_command(args), args.output)
     if args.command == "pipeline":
         if args.pipeline_command == "daily":
             return _emit_json_or_write(pipeline_daily_command(args), args.output)

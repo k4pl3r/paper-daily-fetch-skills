@@ -17,7 +17,8 @@ Use the shared `paper-daily-fetch` pipeline CLI, then render an OpenClaw payload
 ## Commands
 ```bash
 paper-daily-fetch pipeline daily --config config/paper_fetch.toml --topic <topic> --days <days> --limit <limit> --output /tmp/rank.json
-paper-daily-fetch render --target openclaw --input /tmp/rank.json --output /tmp/openclaw_payload.json --target-chat <target_chat>
+paper-daily-fetch annotate --input /tmp/rank.json --annotations /tmp/annotations.json --output /tmp/annotated.json
+paper-daily-fetch render --target openclaw --input /tmp/annotated.json --output /tmp/openclaw_payload.json --target-chat <target_chat>
 ```
 
 For step-by-step debugging:
@@ -26,11 +27,13 @@ For step-by-step debugging:
 paper-daily-fetch discover --config config/paper_fetch.toml --topic <topic> --days <days> --output /tmp/discover.json
 paper-daily-fetch enrich --config config/paper_fetch.toml --input /tmp/discover.json --output /tmp/enrich.json
 paper-daily-fetch rank --config config/paper_fetch.toml --topic <topic> --input /tmp/enrich.json --limit <limit> --output /tmp/rank.json
-paper-daily-fetch render --target openclaw --input /tmp/rank.json --output /tmp/openclaw_payload.json --target-chat <target_chat>
+paper-daily-fetch annotate --input /tmp/rank.json --annotations /tmp/annotations.json --output /tmp/annotated.json
+paper-daily-fetch render --target openclaw --input /tmp/annotated.json --output /tmp/openclaw_payload.json --target-chat <target_chat>
 ```
 
 ## Required Behavior
 - Default to `config/paper_fetch.toml` when the user does not provide a topic.
+- Before `render`, automatically create `/tmp/annotations.json` with a full Chinese translation in `summary_zh`, plus `positive_take` and `critical_take` for each paper.
 - Use the rendered JSON payload directly.
 - Preserve `target_chat` in the final output.
 - If the user asks for “new papers”, prefer the default pipeline path over the legacy `collect` wrapper.

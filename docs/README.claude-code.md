@@ -27,5 +27,5 @@ Start a new Claude Code session after registration.
 ## Example Request
 
 ```text
-Use the claude-code-paper-digest skill to run paper-daily-fetch pipeline daily for 3dgs-reconstruction and write the rendered markdown digest to ./reports/3dgs.md
+Use the claude-code-paper-digest skill to fetch papers for 3dgs-reconstruction, automatically produce a full Chinese translation for each abstract plus positive and critical one-liners, and write the rendered markdown digest to ./reports/3dgs.md
 ```
