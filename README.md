@@ -67,6 +67,7 @@ Default behavior:
 - top 3 papers by default after ranking
 - Chinese output
 - prefer overview/pipeline figure, then fallback to the first image
+- runtime wrapper scripts in `scripts/` choose a compatible Python automatically before running the CLI
 
 ## What The Agent Can Do
 
@@ -85,6 +86,13 @@ Pipeline stages:
 - `annotate` for a host-agent-generated full Chinese translation of each abstract plus positive and critical takes
 - `render` for Markdown or OpenClaw output
 
+Runtime behavior:
+
+- the repository currently requires Python 3.11+
+- agents should first run `sh scripts/resolve_python.sh`
+- if a compatible interpreter already exists, use `sh scripts/run_cli.sh ...` and do not ask the user to upgrade Python
+- only if no compatible interpreter is found, or a real runtime error still occurs, ask whether the user wants help creating a virtual environment or updating Python
+
 Example outputs:
 
 - [examples/sample_collect.json](examples/sample_collect.json)
@@ -101,6 +109,7 @@ Example outputs:
 ├── .openclaw/         # OpenClaw install entrypoint
 ├── .opencode/         # OpenCode install entrypoint
 ├── docs/              # Human-readable installation details
+├── scripts/           # Python detection and CLI wrapper scripts
 ├── src/               # Shared Python CLI
 ├── config/            # Default topic and output config
 └── examples/          # Sample outputs
@@ -118,7 +127,7 @@ Edit `config/paper_fetch.toml`.
 
 ### Where is the developer-facing CLI usage?
 
-The shared CLI lives in `src/paper_daily_fetch`. The homepage keeps install and usage simple; implementation details can stay in the code, examples, and tool-specific docs. The preferred CLI path is now `discover -> enrich -> rank -> annotate -> render` or `pipeline daily` plus an explicit annotation step.
+The shared CLI lives in `src/paper_daily_fetch`. The homepage keeps install and usage simple; implementation details can stay in the code, examples, and tool-specific docs. The preferred path is `sh scripts/run_cli.sh ...`, which resolves a compatible Python first, then runs `discover -> enrich -> rank -> annotate -> render` or `pipeline daily` plus an explicit annotation step.
 
 ## Updating
 

@@ -23,6 +23,14 @@ Restart Codex after creating the symlink.
 - Skill: `skills/codex-paper-digest/SKILL.md`
 - Default config: `config/paper_fetch.toml`
 - Output mode: Markdown file
+- Runtime wrapper: `sh scripts/resolve_python.sh` then `sh scripts/run_cli.sh ...`
+
+## Python Runtime Rule
+
+- This repository currently requires Python 3.11+.
+- Do not ask the user to upgrade Python just because `python3` is older.
+- First run `sh scripts/resolve_python.sh` and use the compatible interpreter it finds.
+- Only if no compatible interpreter exists, or runtime still fails after using it, ask whether the user wants help locating Python 3.11+ or creating a virtual environment.
 
 ## Example Request
 

@@ -35,7 +35,13 @@ git clone https://github.com/k4pl3r/paper-daily-fetch-skills.git ~/.config/openc
 4. Verify that `opencode-paper-digest` is discoverable, then summarize:
    - clone path
    - configured skill path
-   - how to use `paper-daily-fetch pipeline daily`, then generate `/tmp/annotations.json` with a full Chinese translation for each abstract plus `positive_take` and `critical_take`, then run `paper-daily-fetch annotate` and `paper-daily-fetch render` to render a markdown digest
+   - how to use `sh scripts/resolve_python.sh` and `sh scripts/run_cli.sh pipeline daily`, then generate `/tmp/annotations.json` with a full Chinese translation for each abstract plus `positive_take` and `critical_take`, then run `sh scripts/run_cli.sh annotate` and `sh scripts/run_cli.sh render` to render a markdown digest
+
+Important runtime rule:
+
+- Do not ask the user to upgrade Python just because `python3` is older.
+- First run `sh scripts/resolve_python.sh` and use the compatible interpreter it finds.
+- Only if no compatible interpreter exists, or runtime still fails after using it, ask whether the user wants help locating Python 3.11+, creating a virtual environment, or adjusting the install flow.
 
 ## Skill To Use
 

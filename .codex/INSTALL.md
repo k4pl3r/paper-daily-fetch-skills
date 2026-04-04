@@ -32,7 +32,13 @@ ln -s ~/.codex/paper-daily-fetch-skills/skills ~/.agents/skills/paper-daily-fetc
 4. Verify the install by checking that `codex-paper-digest` is discoverable, then summarize:
    - where the repo was cloned
    - where the skills symlink points
-   - how to use `paper-daily-fetch pipeline daily`, then generate `/tmp/annotations.json` with a full Chinese translation for each abstract plus `positive_take` and `critical_take`, then run `paper-daily-fetch annotate` and `paper-daily-fetch render` to generate a markdown digest
+   - how to use `sh scripts/resolve_python.sh` and `sh scripts/run_cli.sh pipeline daily`, then generate `/tmp/annotations.json` with a full Chinese translation for each abstract plus `positive_take` and `critical_take`, then run `sh scripts/run_cli.sh annotate` and `sh scripts/run_cli.sh render` to generate a markdown digest
+
+Important runtime rule:
+
+- Do not ask the user to upgrade Python just because `python3` is older.
+- First run `sh scripts/resolve_python.sh` and use the compatible interpreter it finds.
+- Only if no compatible interpreter exists, or runtime still fails after using it, ask whether the user wants help locating Python 3.11+, creating a virtual environment, or adjusting the install flow.
 
 ## Skill To Use
 

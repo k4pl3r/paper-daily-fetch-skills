@@ -10,9 +10,11 @@ def test_skill_documents_exist_with_expected_entrypoints():
     }
     for skill_name, required_token in expectations.items():
         content = Path(f"skills/{skill_name}/SKILL.md").read_text()
-        assert "paper-daily-fetch discover" in content or "paper-daily-fetch pipeline daily" in content
-        assert "paper-daily-fetch annotate" in content
-        assert "paper-daily-fetch render" in content
+        assert "scripts/resolve_python.sh" in content
+        assert "scripts/run_cli.sh" in content
+        assert "pipeline daily" in content or "discover" in content
+        assert "annotate" in content
+        assert "render" in content
         assert required_token in content
 
 
@@ -28,6 +30,8 @@ def test_install_entrypoints_and_docs_exist():
         ".opencode/INSTALL.md",
         ".claude/INSTALL.md",
         ".openclaw/INSTALL.md",
+        "scripts/resolve_python.sh",
+        "scripts/run_cli.sh",
         "docs/README.codex.md",
         "docs/README.opencode.md",
         "docs/README.claude-code.md",
