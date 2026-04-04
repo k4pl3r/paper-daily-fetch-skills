@@ -37,6 +37,19 @@ sh scripts/run_cli.sh render --target markdown --input /tmp/annotated.json --out
 - If a compatible interpreter exists, proceed without asking the user to upgrade Python.
 - Only if no compatible interpreter exists, or runtime still fails after using the resolved interpreter, ask whether the user wants help locating Python 3.11+, creating a virtual environment, or adjusting the install flow.
 - For on-demand usage, include seen papers so repeated manual runs still produce a full digest.
-- Before `render`, automatically create `/tmp/annotations.json` with one item per paper containing `summary_zh`, `positive_take`, and `critical_take`.
-- `summary_zh` must be a faithful full Chinese translation of the English abstract, not a compressed summary.
+- Before running `annotate`, create `/tmp/annotations.json` with the following schema — one entry per paper using the `arxiv_id` values returned by the previous step:
+
+```json
+{
+  "papers": [
+    {
+      "arxiv_id": "<id from rank output>",
+      "summary_zh": "<full faithful Chinese translation of the English abstract — not a compressed summary>",
+      "positive_take": "<one sentence: the paper's key contribution in positive framing>",
+      "critical_take": "<one sentence: a sharp, honest critique compared with prior work>"
+    }
+  ]
+}
+```
+
 - Write the final Markdown to `output_path`.

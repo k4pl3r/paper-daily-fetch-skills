@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 from .config import load_config
+from .history import PublishHistoryStore
 from .models import PaperRecord
 from .pipeline.annotate import apply_annotations
 from .pipeline.discover import discover_candidates
@@ -46,6 +47,11 @@ def build_parser() -> argparse.ArgumentParser:
     annotate.add_argument("--annotations", required=True)
     annotate.add_argument("--config", default=str(DEFAULT_CONFIG_PATH))
     annotate.add_argument("--output")
+
+    publish = subparsers.add_parser("publish")
+    publish.add_argument("--input", required=True)
+    publish.add_argument("--config", default=str(DEFAULT_CONFIG_PATH))
+    publish.add_argument("--output")
 
     pipeline = subparsers.add_parser("pipeline")
     pipeline_subparsers = pipeline.add_subparsers(dest="pipeline_command", required=True)
@@ -157,6 +163,21 @@ def annotate_command(args: argparse.Namespace) -> dict[str, object]:
     }
 
 
+def publish_command(args: argparse.Namespace) -> dict[str, object]:
+    config = load_config(args.config)
+    payload = _read_payload(args.input)
+    papers = [PaperRecord.from_dict(item) for item in payload.get("papers", [])]
+    published_ids = [paper.arxiv_id for paper in papers if paper.arxiv_id]
+    history = PublishHistoryStore(config.history.path)
+    if published_ids:
+        history.mark_published(published_ids)
+    return {
+        "published_ids": published_ids,
+        "count": len(published_ids),
+        "history_path": str(config.history.path),
+    }
+
+
 def pipeline_daily_command(args: argparse.Namespace) -> dict[str, object]:
     config = load_config(args.config)
     topic = args.topic or config.default_topic
@@ -192,9 +213,14 @@ def pipeline_daily_command(args: argparse.Namespace) -> dict[str, object]:
         limit=args.limit or config.rank.final_limit,
     )
     if args.include_seen:
+        # Manual / reproducible run: return all ranked papers regardless of history.
         visible = ranked
     else:
-        visible = ranked
+        # Automated / push run: filter out papers already published.
+        # Recording should happen only after the final delivery step succeeds.
+        history = PublishHistoryStore(config.history.path)
+        new_ids = set(history.filter_new([p.arxiv_id for p in ranked]))
+        visible = [p for p in ranked if p.arxiv_id in new_ids]
     return {
         "topic": topic,
         "generated_at": _now(),
@@ -235,6 +261,8 @@ def main(argv: list[str] | None = None) -> int:
         return _emit_json_or_write(rank_command(args), args.output)
     if args.command == "annotate":
         return _emit_json_or_write(annotate_command(args), args.output)
+    if args.command == "publish":
+        return _emit_json_or_write(publish_command(args), args.output)
     if args.command == "pipeline":
         if args.pipeline_command == "daily":
             return _emit_json_or_write(pipeline_daily_command(args), args.output)

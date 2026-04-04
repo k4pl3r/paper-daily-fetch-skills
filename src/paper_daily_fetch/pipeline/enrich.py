@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -18,11 +19,13 @@ def enrich_candidates(
     for paper in papers:
         try:
             abs_html = http_get(paper.paper_url)
-        except Exception:
+        except Exception as exc:
+            print(f"[paper-daily-fetch] enrich: abs fetch failed for {paper.arxiv_id!r}: {exc!r}", file=sys.stderr)
             abs_html = None
         try:
             html = http_get(arxiv_html_url(paper.paper_url))
-        except Exception:
+        except Exception as exc:
+            print(f"[paper-daily-fetch] enrich: html fetch failed for {paper.arxiv_id!r}: {exc!r}", file=sys.stderr)
             html = None
         try:
             enriched_paper = enrich_paper_links(
@@ -31,7 +34,8 @@ def enrich_candidates(
                 arxiv_abs_html=abs_html,
                 arxiv_html=html,
             )
-        except Exception:
+        except Exception as exc:
+            print(f"[paper-daily-fetch] enrich: link enrichment failed for {paper.arxiv_id!r}: {exc!r}", file=sys.stderr)
             enriched.append(paper)
             continue
         pdf_candidates = _fetch_pdf_candidates(

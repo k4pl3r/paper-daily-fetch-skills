@@ -52,7 +52,6 @@ def collect_papers(
     else:
         visible_ids = set(state.filter_new([paper.arxiv_id for paper in ranked]))
         visible = [paper for paper in ranked if paper.arxiv_id in visible_ids]
-        state.mark_published(list(visible_ids))
     return {
         "topic": selected_topic,
         "generated_at": datetime.now(timezone.utc).isoformat(),

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import sys
 from typing import Callable
 
 from ..infra.http import HttpClient
@@ -43,7 +45,23 @@ def discover_candidates(
                 http_get=client.get_text,
                 max_results=candidate_limit,
             )
-        except Exception:
+        except Exception as exc:
+            print(
+                f"[paper-daily-fetch] source {source_name!r} failed: {exc!r}",
+                file=sys.stderr,
+            )
             continue
         collected.extend(items)
-    return merge_candidates(collected)
+    merged = merge_candidates(collected)
+    merged.sort(
+        key=lambda paper: (_parse_published(paper.published_at), paper.arxiv_id),
+        reverse=True,
+    )
+    return merged[:candidate_limit]
+
+
+def _parse_published(value: str) -> datetime:
+    published = datetime.fromisoformat(value)
+    if published.tzinfo is None:
+        published = published.replace(tzinfo=timezone.utc)
+    return published

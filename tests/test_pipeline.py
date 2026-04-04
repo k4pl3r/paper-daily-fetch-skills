@@ -105,3 +105,52 @@ def test_rank_candidates_applies_negative_keywords_and_domain_boost():
     assert [paper.arxiv_id for paper in ranked] == ["2603.25745"]
     assert ranked[0].score > 0
     assert "domain-boost:4k" in ranked[0].match_reason
+
+
+def test_discover_candidates_respects_candidate_limit_after_merge():
+    def hf_source(**_: object) -> list[PaperRecord]:
+        return [
+            make_candidate(
+                arxiv_id="2603.30001",
+                title="Newest",
+                abstract="First",
+                source="hf-daily",
+                published_at="2026-03-29T00:00:00+00:00",
+            ),
+            make_candidate(
+                arxiv_id="2603.30002",
+                title="Second",
+                abstract="Second",
+                source="hf-daily",
+                published_at="2026-03-28T00:00:00+00:00",
+            ),
+        ]
+
+    def api_source(**_: object) -> list[PaperRecord]:
+        return [
+            make_candidate(
+                arxiv_id="2603.30003",
+                title="Third",
+                abstract="Third",
+                source="arxiv-api",
+                published_at="2026-03-27T00:00:00+00:00",
+            ),
+            make_candidate(
+                arxiv_id="2603.30004",
+                title="Fourth",
+                abstract="Fourth",
+                source="arxiv-api",
+                published_at="2026-03-26T00:00:00+00:00",
+            ),
+        ]
+
+    discovered = discover_candidates(
+        topic_name="video-generation",
+        keywords=["world model"],
+        days=7,
+        enabled_sources=["hf-daily", "arxiv-api"],
+        source_fetchers={"hf-daily": hf_source, "arxiv-api": api_source},
+        candidate_limit=2,
+    )
+
+    assert [paper.arxiv_id for paper in discovered] == ["2603.30001", "2603.30002"]

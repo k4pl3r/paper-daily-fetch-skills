@@ -13,6 +13,12 @@ ARXIV_API_URL = "https://export.arxiv.org/api/query"
 
 
 def build_arxiv_query(keywords: list[str], max_results: int = 50) -> str:
+    """Build an arXiv API query URL for one or more keywords (OR-joined).
+
+    Prefer calling with a single keyword so that each term gets its own result
+    budget; OR-joining multiple terms causes high-volume keywords to crowd out
+    the others within the shared max_results window.
+    """
     joined = " OR ".join(f'all:"{keyword}"' for keyword in keywords)
     return (
         f"{ARXIV_API_URL}?search_query={quote_plus(joined)}"
@@ -64,14 +70,26 @@ def fetch_candidates(
     http_get: Callable[[str], str],
     max_results: int = 50,
 ) -> list[PaperRecord]:
-    raw = http_get(build_arxiv_query(keywords, max_results=max_results))
-    papers = parse_arxiv_feed(raw)
+    # Query each keyword independently so that no single high-volume keyword
+    # crowds out the others within a shared max_results budget.
+    # Scale per-keyword limit by days to avoid truncation on wider look-back
+    # windows; cap at 100 to stay within arXiv API fair-use guidelines.
+    per_keyword_limit = min(100, max(max_results, days * 5))
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    return [
-        paper
-        for paper in papers
-        if _parse_datetime(paper.published_at) >= cutoff
-    ]
+    seen_ids: set[str] = set()
+    all_papers: list[PaperRecord] = []
+    for keyword in keywords:
+        try:
+            raw = http_get(build_arxiv_query([keyword], max_results=per_keyword_limit))
+        except Exception:
+            continue
+        for paper in parse_arxiv_feed(raw):
+            if paper.arxiv_id in seen_ids:
+                continue
+            seen_ids.add(paper.arxiv_id)
+            if _parse_datetime(paper.published_at) >= cutoff:
+                all_papers.append(paper)
+    return all_papers
 
 
 def _parse_datetime(value: str) -> datetime:

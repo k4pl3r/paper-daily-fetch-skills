@@ -51,7 +51,7 @@ def enrich_paper_links(
         return replace(paper, code_url=code_url)
     pwc_search_url = f"{PWC_BASE_URL}/search?q={quote_plus(paper.title)}"
     search_html = fetch(pwc_search_url)
-    pwc_paper_path = _extract_first_pwc_paper_path(search_html)
+    pwc_paper_path = _extract_first_pwc_paper_path(search_html, paper.title)
     if not pwc_paper_path:
         return paper
     pwc_paper_html = fetch(urljoin(PWC_BASE_URL, pwc_paper_path))
@@ -94,11 +94,39 @@ def _find_code_url(html: str) -> str | None:
     return None
 
 
-def _extract_first_pwc_paper_path(html: str) -> str | None:
-    match = re.search(r'href=["\'](/paper/[^"\']+)["\']', html, flags=re.IGNORECASE)
-    if not match:
-        return None
-    return match.group(1)
+def _extract_first_pwc_paper_path(html: str, query_title: str | None = None) -> str | None:
+    """Return the first PaperWithCode paper path from a search result page.
+
+    When *query_title* is given the candidate is only accepted when its anchor
+    text is similar enough to the query title (Jaccard ≥ 0.4).  This guards
+    against returning a completely unrelated paper that happens to rank first.
+    """
+    for match in re.finditer(
+        r'href=["\'](/paper/[^"\']+)["\'][^>]*>(.*?)</a>',
+        html,
+        flags=re.IGNORECASE | re.DOTALL,
+    ):
+        path = match.group(1)
+        anchor_text = re.sub(r"<[^>]+>", " ", match.group(2)).strip()
+        if query_title and not _titles_similar(query_title, anchor_text):
+            continue
+        return path
+    # Fallback: accept any /paper/ href without title verification.
+    simple = re.search(r'href=["\'](/paper/[^"\']+)["\']', html, flags=re.IGNORECASE)
+    return simple.group(1) if simple else None
+
+
+def _titles_similar(a: str, b: str, threshold: float = 0.4) -> bool:
+    """Jaccard similarity on lowercased word tokens; True when >= threshold."""
+    if not b:
+        return False
+    tokens_a = set(re.findall(r"[a-z0-9]+", a.lower()))
+    tokens_b = set(re.findall(r"[a-z0-9]+", b.lower()))
+    if not tokens_a or not tokens_b:
+        return False
+    intersection = tokens_a & tokens_b
+    union = tokens_a | tokens_b
+    return len(intersection) / len(union) >= threshold
 
 
 def _normalize_text(text: str) -> str:

@@ -57,8 +57,10 @@ def extract_pdf_candidates(pdf_path: str | Path) -> list[FigureSelection]:
                     )
                 )
                 pixmap = None
-                if candidates:
-                    return candidates
+            # Only scan the first page that yields images — return early to avoid
+            # extracting the entire PDF when we only need one representative figure.
+            if candidates:
+                return candidates
     return candidates
 
 

@@ -15,7 +15,11 @@ def test_skill_documents_exist_with_expected_entrypoints():
         assert "pipeline daily" in content or "discover" in content
         assert "annotate" in content
         assert "render" in content
+        assert "“" not in content
+        assert "”" not in content
         assert required_token in content
+    openclaw = Path("skills/openclaw-paper-digest/SKILL.md").read_text()
+    assert "publish --input /tmp/annotated.json" in openclaw
 
 
 def test_example_artifacts_exist():

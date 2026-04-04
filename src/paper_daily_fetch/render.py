@@ -3,6 +3,11 @@ from __future__ import annotations
 from .models import PaperRecord
 
 
+def _escape_md(text: str) -> str:
+    """Escape Markdown link/image-syntax special characters in plain text."""
+    return text.replace("[", "\\[").replace("]", "\\]")
+
+
 def render_openclaw_payload(
     papers: list[PaperRecord],
     target_chat: str | None,
@@ -50,7 +55,7 @@ def render_markdown(
                 f"## {paper.title}",
                 "",
                 f"- arXiv ID：{paper.arxiv_id}",
-                f"- 作者：{', '.join(paper.authors)}",
+                f"- 作者：{', '.join(paper.authors) if paper.authors else '未知'}",
                 f"- 发布时间：{paper.published_at}",
                 f"- 匹配主题：{', '.join(paper.topic_matches)}",
                 f"- 论文链接：[{paper.paper_url}]({paper.paper_url})",
@@ -58,7 +63,7 @@ def render_markdown(
             ]
         )
         if paper.figure_url_or_path:
-            lines.append(f"- 配图：![{paper.title}]({paper.figure_url_or_path})")
+            lines.append(f"- 配图：![{_escape_md(paper.title)}]({paper.figure_url_or_path})")
         else:
             lines.append("- 配图：暂无")
         if paper.figure_reason:
