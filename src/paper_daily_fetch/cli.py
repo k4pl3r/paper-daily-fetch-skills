@@ -54,7 +54,9 @@ def build_parser() -> argparse.ArgumentParser:
     publish.add_argument("--output")
 
     pipeline = subparsers.add_parser("pipeline")
-    pipeline_subparsers = pipeline.add_subparsers(dest="pipeline_command", required=True)
+    pipeline_subparsers = pipeline.add_subparsers(
+        dest="pipeline_command", required=True
+    )
     pipeline_daily = pipeline_subparsers.add_parser("daily")
     pipeline_daily.add_argument("--topic")
     pipeline_daily.add_argument("--days", type=int)
@@ -123,6 +125,8 @@ def enrich_command(args: argparse.Namespace) -> dict[str, object]:
         http_get=client.get_text,
         http_get_bytes=client.get_bytes,
         cache_dir=config.cache_dir,
+        max_workers=config.enrich.max_workers,
+        timeout=config.enrich.timeout,
     )
     return {
         "topic": payload.get("topic", config.default_topic),
@@ -204,6 +208,8 @@ def pipeline_daily_command(args: argparse.Namespace) -> dict[str, object]:
         http_get=client.get_text,
         http_get_bytes=client.get_bytes,
         cache_dir=config.cache_dir,
+        max_workers=config.enrich.max_workers,
+        timeout=config.enrich.timeout,
     )
     ranked = rank_candidates(
         enriched,

@@ -45,7 +45,11 @@ def test_pipeline_daily_command_writes_ranked_json(monkeypatch, tmp_path: Path):
 
     monkeypatch.setattr(
         "paper_daily_fetch.cli.pipeline_daily_command",
-        lambda args: {"topic": "video-generation", "generated_at": "2026-03-29T12:00:00+00:00", "papers": []},
+        lambda args: {
+            "topic": "video-generation",
+            "generated_at": "2026-03-29T12:00:00+00:00",
+            "papers": [],
+        },
     )
 
     exit_code = main(
@@ -171,7 +175,7 @@ def test_publish_command_marks_history_after_success(tmp_path: Path):
     input_path = tmp_path / "annotated.json"
     config_path = tmp_path / "config.toml"
     config_path.write_text(
-        '\n'.join(
+        "\n".join(
             [
                 'default_topic = "video-generation"',
                 'language = "zh-CN"',
@@ -242,7 +246,9 @@ def test_publish_command_marks_history_after_success(tmp_path: Path):
     assert history["published_ids"] == ["2603.00001v1"]
 
 
-def test_pipeline_daily_filters_history_without_marking_published(monkeypatch, tmp_path: Path):
+def test_pipeline_daily_filters_history_without_marking_published(
+    monkeypatch, tmp_path: Path
+):
     history_path = tmp_path / "history.json"
     history_path.write_text(json.dumps({"published_ids": ["2603.00002v1"]}))
 
@@ -250,8 +256,11 @@ def test_pipeline_daily_filters_history_without_marking_published(monkeypatch, t
         default_topic="video-generation",
         lookback_days=7,
         cache_dir=tmp_path,
-        sources=SimpleNamespace(enabled=["arxiv-search"], retries=0, backoff_seconds=0.0, timeout=5),
+        sources=SimpleNamespace(
+            enabled=["arxiv-search"], retries=0, backoff_seconds=0.0, timeout=5
+        ),
         discover=SimpleNamespace(candidate_limit=10),
+        enrich=SimpleNamespace(max_workers=5, timeout=30),
         rank=SimpleNamespace(final_limit=3),
         history=SimpleNamespace(path=history_path),
     )
@@ -287,9 +296,15 @@ def test_pipeline_daily_filters_history_without_marking_published(monkeypatch, t
     ]
 
     monkeypatch.setattr("paper_daily_fetch.cli.load_config", lambda path: config)
-    monkeypatch.setattr("paper_daily_fetch.cli.discover_candidates", lambda **kwargs: papers)
-    monkeypatch.setattr("paper_daily_fetch.cli.enrich_candidates", lambda papers, **kwargs: papers)
-    monkeypatch.setattr("paper_daily_fetch.cli.rank_candidates", lambda papers, **kwargs: papers)
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.discover_candidates", lambda **kwargs: papers
+    )
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.enrich_candidates", lambda papers, **kwargs: papers
+    )
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.rank_candidates", lambda papers, **kwargs: papers
+    )
 
     payload = pipeline_daily_command(
         SimpleNamespace(

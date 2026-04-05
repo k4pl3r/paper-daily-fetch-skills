@@ -25,7 +25,9 @@ def collect_papers(
     negative_keywords = config.topic_negative_keywords(selected_topic)
     domain_boost_keywords = config.topic_domain_boost_keywords(selected_topic)
     client = HttpClient(
-        transport=(lambda url, timeout: http_get(url)) if http_get else default_transport,
+        transport=(lambda url, timeout: http_get(url))
+        if http_get
+        else default_transport,
         retries=config.sources.retries,
         backoff_seconds=config.sources.backoff_seconds,
         timeout=config.sources.timeout,
@@ -38,7 +40,14 @@ def collect_papers(
         http_client=client,
         candidate_limit=config.discover.candidate_limit,
     )
-    enriched = enrich_candidates(discovered, http_get=client.get_text)
+    enriched = enrich_candidates(
+        discovered,
+        http_get=client.get_text,
+        http_get_bytes=client.get_bytes,
+        cache_dir=config.cache_dir,
+        max_workers=config.enrich.max_workers,
+        timeout=config.enrich.timeout,
+    )
     ranked = rank_candidates(
         enriched,
         keywords=keywords,

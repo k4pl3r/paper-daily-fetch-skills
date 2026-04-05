@@ -13,6 +13,13 @@ backoff_seconds = 1.0
 [discover]
 candidate_limit = 50
 
+[enrich]
+# Number of parallel workers for enrichment (code URL + figure extraction)
+# Higher values = faster but more concurrent connections to arXiv
+max_workers = 5
+# Timeout for individual enrichment requests (seconds)
+timeout = 30
+
 [rank]
 final_limit = 3
 

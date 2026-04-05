@@ -32,6 +32,12 @@ class DiscoverConfig:
 
 
 @dataclass(slots=True)
+class EnrichConfig:
+    max_workers: int
+    timeout: int
+
+
+@dataclass(slots=True)
 class RankConfig:
     final_limit: int
 
@@ -55,6 +61,7 @@ class AppConfig:
     openclaw: OpenClawConfig
     sources: SourcesConfig
     discover: DiscoverConfig
+    enrich: EnrichConfig
     rank: RankConfig
     history: HistoryConfig
     topics: dict[str, TopicConfig]
@@ -76,13 +83,11 @@ class AppConfig:
 def load_config(path: str | Path) -> AppConfig:
     config_path = Path(path).expanduser().resolve()
     data = tomllib.loads(config_path.read_text())
-    cache_dir = Path(
-        data.get("cache_dir", "~/.cache/paper-daily-fetch")
-    ).expanduser()
+    cache_dir = Path(data.get("cache_dir", "~/.cache/paper-daily-fetch")).expanduser()
     state_path_value = data.get("state_path", str(cache_dir / "state" / "seen.json"))
-    history_path_value = data.get(
-        "history", {}
-    ).get("path", str(cache_dir / "history" / "published.json"))
+    history_path_value = data.get("history", {}).get(
+        "path", str(cache_dir / "history" / "published.json")
+    )
     topics = {
         name: TopicConfig(
             name=name,
@@ -94,7 +99,9 @@ def load_config(path: str | Path) -> AppConfig:
     }
     return AppConfig(
         default_topic=data["default_topic"],
-        lookback_days=int(data.get("lookback_days", data.get("history", {}).get("lookback_days", 1))),
+        lookback_days=int(
+            data.get("lookback_days", data.get("history", {}).get("lookback_days", 1))
+        ),
         limit=int(data.get("limit", data.get("rank", {}).get("final_limit", 3))),
         language=data["language"],
         image_strategy=data["image_strategy"],
@@ -105,7 +112,11 @@ def load_config(path: str | Path) -> AppConfig:
             default_target=data.get("openclaw", {}).get("default_target")
         ),
         sources=SourcesConfig(
-            enabled=list(data.get("sources", {}).get("enabled", ["hf-daily", "hf-trending", "arxiv-api", "arxiv-search"])),
+            enabled=list(
+                data.get("sources", {}).get(
+                    "enabled", ["hf-daily", "hf-trending", "arxiv-api", "arxiv-search"]
+                )
+            ),
             timeout=int(data.get("sources", {}).get("timeout", 20)),
             retries=int(data.get("sources", {}).get("retries", 2)),
             backoff_seconds=float(data.get("sources", {}).get("backoff_seconds", 1.0)),
@@ -113,12 +124,22 @@ def load_config(path: str | Path) -> AppConfig:
         discover=DiscoverConfig(
             candidate_limit=int(data.get("discover", {}).get("candidate_limit", 50))
         ),
+        enrich=EnrichConfig(
+            max_workers=max(1, int(data.get("enrich", {}).get("max_workers", 5))),
+            timeout=int(data.get("enrich", {}).get("timeout", 30)),
+        ),
         rank=RankConfig(
-            final_limit=int(data.get("rank", {}).get("final_limit", data.get("limit", 3)))
+            final_limit=int(
+                data.get("rank", {}).get("final_limit", data.get("limit", 3))
+            )
         ),
         history=HistoryConfig(
             path=_resolve_path(config_path, history_path_value),
-            lookback_days=int(data.get("history", {}).get("lookback_days", data.get("lookback_days", 14))),
+            lookback_days=int(
+                data.get("history", {}).get(
+                    "lookback_days", data.get("lookback_days", 14)
+                )
+            ),
         ),
         topics=topics,
         config_path=config_path,

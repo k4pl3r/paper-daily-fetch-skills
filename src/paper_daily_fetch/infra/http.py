@@ -7,17 +7,17 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 
-Transport = Callable[[str, int], str]
-BinaryTransport = Callable[[str, int], bytes]
+Transport = Callable[[str, float], str]
+BinaryTransport = Callable[[str, float], bytes]
 
 
-def default_transport(url: str, timeout: int) -> str:
+def default_transport(url: str, timeout: float) -> str:
     request = Request(url, headers={"User-Agent": "paper-daily-fetch/0.2"})
     with urlopen(request, timeout=timeout) as response:
         return response.read().decode("utf-8", errors="replace")
 
 
-def default_binary_transport(url: str, timeout: int) -> bytes:
+def default_binary_transport(url: str, timeout: float) -> bytes:
     request = Request(url, headers={"User-Agent": "paper-daily-fetch/0.2"})
     with urlopen(request, timeout=timeout) as response:
         return response.read()
@@ -29,13 +29,15 @@ class HttpClient:
     binary_transport: BinaryTransport = default_binary_transport
     retries: int = 2
     backoff_seconds: float = 1.0
-    timeout: int = 20
+    timeout: float = 20
 
-    def get_text(self, url: str) -> str:
-        return self._request(lambda: self.transport(url, self.timeout))
+    def get_text(self, url: str, timeout: float | None = None) -> str:
+        effective_timeout = self.timeout if timeout is None else timeout
+        return self._request(lambda: self.transport(url, effective_timeout))
 
-    def get_bytes(self, url: str) -> bytes:
-        return self._request(lambda: self.binary_transport(url, self.timeout))
+    def get_bytes(self, url: str, timeout: float | None = None) -> bytes:
+        effective_timeout = self.timeout if timeout is None else timeout
+        return self._request(lambda: self.binary_transport(url, effective_timeout))
 
     def _request(self, operation):
         last_error: Exception | None = None
