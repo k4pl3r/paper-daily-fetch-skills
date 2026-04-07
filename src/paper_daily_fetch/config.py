@@ -35,6 +35,7 @@ class DiscoverConfig:
 class EnrichConfig:
     max_workers: int
     timeout: int
+    pre_rank_limit: int  # Number of papers to pre-rank before enriching
 
 
 @dataclass(slots=True)
@@ -125,8 +126,9 @@ def load_config(path: str | Path) -> AppConfig:
             candidate_limit=int(data.get("discover", {}).get("candidate_limit", 50))
         ),
         enrich=EnrichConfig(
-            max_workers=max(1, int(data.get("enrich", {}).get("max_workers", 5))),
+            max_workers=max(1, int(data.get("enrich", {}).get("max_workers", 10))),
             timeout=int(data.get("enrich", {}).get("timeout", 30)),
+            pre_rank_limit=max(1, int(data.get("enrich", {}).get("pre_rank_limit", 10))),
         ),
         rank=RankConfig(
             final_limit=int(

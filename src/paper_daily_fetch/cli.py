@@ -203,8 +203,26 @@ def pipeline_daily_command(args: argparse.Namespace) -> dict[str, object]:
         http_client=client,
         candidate_limit=config.discover.candidate_limit,
     )
-    enriched = enrich_candidates(
+    desired_limit = args.limit or config.rank.final_limit
+    ranked_candidates = rank_candidates(
         discovered,
+        keywords=config.topic_keywords(topic),
+        negative_keywords=config.topic_negative_keywords(topic),
+        domain_boost_keywords=config.topic_domain_boost_keywords(topic),
+        limit=len(discovered),
+    )
+    if args.include_seen:
+        visible_candidates = ranked_candidates
+    else:
+        history = PublishHistoryStore(config.history.path)
+        new_ids = set(history.filter_new([p.arxiv_id for p in ranked_candidates]))
+        visible_candidates = [
+            paper for paper in ranked_candidates if paper.arxiv_id in new_ids
+        ]
+    pre_rank_limit = max(config.enrich.pre_rank_limit, desired_limit)
+    pre_ranked = visible_candidates[:pre_rank_limit]
+    enriched = enrich_candidates(
+        pre_ranked,
         http_get=client.get_text,
         http_get_bytes=client.get_bytes,
         cache_dir=config.cache_dir,
@@ -216,21 +234,12 @@ def pipeline_daily_command(args: argparse.Namespace) -> dict[str, object]:
         keywords=config.topic_keywords(topic),
         negative_keywords=config.topic_negative_keywords(topic),
         domain_boost_keywords=config.topic_domain_boost_keywords(topic),
-        limit=args.limit or config.rank.final_limit,
+        limit=desired_limit,
     )
-    if args.include_seen:
-        # Manual / reproducible run: return all ranked papers regardless of history.
-        visible = ranked
-    else:
-        # Automated / push run: filter out papers already published.
-        # Recording should happen only after the final delivery step succeeds.
-        history = PublishHistoryStore(config.history.path)
-        new_ids = set(history.filter_new([p.arxiv_id for p in ranked]))
-        visible = [p for p in ranked if p.arxiv_id in new_ids]
     return {
         "topic": topic,
         "generated_at": _now(),
-        "papers": [paper.to_dict() for paper in visible],
+        "papers": [paper.to_dict() for paper in ranked],
     }
 
 

@@ -15,10 +15,13 @@ candidate_limit = 50
 
 [enrich]
 # Number of parallel workers for enrichment (code URL + figure extraction)
-# Higher values = faster but more concurrent connections to arXiv
-max_workers = 5
-# Timeout for individual enrichment requests (seconds)
+# Higher values = faster but may trigger arXiv rate limiting (429 errors)
+max_workers = 10
+# Timeout budget in seconds for each paper's enrichment
 timeout = 30
+# Pre-rank limit: only enrich the top N papers after initial ranking
+# This dramatically reduces HTTP requests (e.g., 10 instead of 50)
+pre_rank_limit = 10
 
 [rank]
 final_limit = 3

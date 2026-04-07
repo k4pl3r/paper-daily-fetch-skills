@@ -260,7 +260,7 @@ def test_pipeline_daily_filters_history_without_marking_published(
             enabled=["arxiv-search"], retries=0, backoff_seconds=0.0, timeout=5
         ),
         discover=SimpleNamespace(candidate_limit=10),
-        enrich=SimpleNamespace(max_workers=5, timeout=30),
+        enrich=SimpleNamespace(max_workers=5, timeout=30, pre_rank_limit=10),
         rank=SimpleNamespace(final_limit=3),
         history=SimpleNamespace(path=history_path),
     )
@@ -320,3 +320,154 @@ def test_pipeline_daily_filters_history_without_marking_published(
     assert [paper["arxiv_id"] for paper in payload["papers"]] == ["2603.00001v1"]
     history = json.loads(history_path.read_text())
     assert history["published_ids"] == ["2603.00002v1"]
+
+
+def test_pipeline_daily_filters_seen_before_pre_rank_limit(
+    monkeypatch, tmp_path: Path
+):
+    history_path = tmp_path / "history.json"
+    history_path.write_text(json.dumps({"published_ids": ["2603.00001v1"]}))
+
+    config = SimpleNamespace(
+        default_topic="video-generation",
+        lookback_days=7,
+        cache_dir=tmp_path,
+        sources=SimpleNamespace(
+            enabled=["arxiv-search"], retries=0, backoff_seconds=0.0, timeout=5
+        ),
+        discover=SimpleNamespace(candidate_limit=10),
+        enrich=SimpleNamespace(max_workers=5, timeout=30, pre_rank_limit=1),
+        rank=SimpleNamespace(final_limit=1),
+        history=SimpleNamespace(path=history_path),
+    )
+    config.topic_keywords = lambda topic: ["video generation"]
+    config.topic_negative_keywords = lambda topic: []
+    config.topic_domain_boost_keywords = lambda topic: []
+
+    papers = [
+        PaperRecord(
+            arxiv_id="2603.00001v1",
+            title="SeenWM",
+            authors=[],
+            published_at="2026-03-28T05:00:00+00:00",
+            abstract="Already published paper.",
+            paper_url="https://arxiv.org/abs/2603.00001v1",
+            code_url=None,
+            figure_url_or_path=None,
+            figure_reason=None,
+            topic_matches=[],
+        ),
+        PaperRecord(
+            arxiv_id="2603.00002v1",
+            title="FreshWM",
+            authors=[],
+            published_at="2026-03-27T05:00:00+00:00",
+            abstract="A new world model paper.",
+            paper_url="https://arxiv.org/abs/2603.00002v1",
+            code_url=None,
+            figure_url_or_path=None,
+            figure_reason=None,
+            topic_matches=[],
+        ),
+    ]
+
+    monkeypatch.setattr("paper_daily_fetch.cli.load_config", lambda path: config)
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.discover_candidates", lambda **kwargs: papers
+    )
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.enrich_candidates", lambda papers, **kwargs: papers
+    )
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.rank_candidates", lambda papers, **kwargs: papers[: kwargs["limit"]]
+    )
+
+    payload = pipeline_daily_command(
+        SimpleNamespace(
+            config="unused",
+            topic="video-generation",
+            days=None,
+            limit=None,
+            sources=None,
+            include_seen=False,
+        )
+    )
+
+    assert [paper["arxiv_id"] for paper in payload["papers"]] == ["2603.00002v1"]
+
+
+def test_pipeline_daily_does_not_cap_user_limit_with_pre_rank_limit(
+    monkeypatch, tmp_path: Path
+):
+    history_path = tmp_path / "history.json"
+    history_path.write_text(json.dumps({"published_ids": []}))
+
+    config = SimpleNamespace(
+        default_topic="video-generation",
+        lookback_days=7,
+        cache_dir=tmp_path,
+        sources=SimpleNamespace(
+            enabled=["arxiv-search"], retries=0, backoff_seconds=0.0, timeout=5
+        ),
+        discover=SimpleNamespace(candidate_limit=10),
+        enrich=SimpleNamespace(max_workers=5, timeout=30, pre_rank_limit=1),
+        rank=SimpleNamespace(final_limit=3),
+        history=SimpleNamespace(path=history_path),
+    )
+    config.topic_keywords = lambda topic: ["video generation"]
+    config.topic_negative_keywords = lambda topic: []
+    config.topic_domain_boost_keywords = lambda topic: []
+
+    papers = [
+        PaperRecord(
+            arxiv_id="2603.00001v1",
+            title="Paper 1",
+            authors=[],
+            published_at="2026-03-28T05:00:00+00:00",
+            abstract="First paper.",
+            paper_url="https://arxiv.org/abs/2603.00001v1",
+            code_url=None,
+            figure_url_or_path=None,
+            figure_reason=None,
+            topic_matches=[],
+        ),
+        PaperRecord(
+            arxiv_id="2603.00002v1",
+            title="Paper 2",
+            authors=[],
+            published_at="2026-03-27T05:00:00+00:00",
+            abstract="Second paper.",
+            paper_url="https://arxiv.org/abs/2603.00002v1",
+            code_url=None,
+            figure_url_or_path=None,
+            figure_reason=None,
+            topic_matches=[],
+        ),
+    ]
+
+    monkeypatch.setattr("paper_daily_fetch.cli.load_config", lambda path: config)
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.discover_candidates", lambda **kwargs: papers
+    )
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.enrich_candidates", lambda papers, **kwargs: papers
+    )
+    monkeypatch.setattr(
+        "paper_daily_fetch.cli.rank_candidates", lambda papers, **kwargs: papers[: kwargs["limit"]]
+    )
+
+    payload = pipeline_daily_command(
+        SimpleNamespace(
+            config="unused",
+            topic="video-generation",
+            days=None,
+            limit=2,
+            sources=None,
+            include_seen=True,
+        )
+    )
+
+    assert [paper["arxiv_id"] for paper in payload["papers"]] == [
+        "2603.00001v1",
+        "2603.00002v1",
+    ]

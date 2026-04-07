@@ -40,8 +40,28 @@ def collect_papers(
         http_client=client,
         candidate_limit=config.discover.candidate_limit,
     )
-    enriched = enrich_candidates(
+    desired_limit = limit or config.rank.final_limit
+    ranked_candidates = rank_candidates(
         discovered,
+        keywords=keywords,
+        negative_keywords=negative_keywords,
+        domain_boost_keywords=domain_boost_keywords,
+        limit=len(discovered),
+    )
+    if include_seen:
+        visible_candidates = ranked_candidates
+    else:
+        state = PublishHistoryStore(config.history.path)
+        visible_ids = set(
+            state.filter_new([paper.arxiv_id for paper in ranked_candidates])
+        )
+        visible_candidates = [
+            paper for paper in ranked_candidates if paper.arxiv_id in visible_ids
+        ]
+    pre_rank_limit = max(config.enrich.pre_rank_limit, desired_limit)
+    pre_ranked = visible_candidates[:pre_rank_limit]
+    enriched = enrich_candidates(
+        pre_ranked,
         http_get=client.get_text,
         http_get_bytes=client.get_bytes,
         cache_dir=config.cache_dir,
@@ -53,16 +73,10 @@ def collect_papers(
         keywords=keywords,
         negative_keywords=negative_keywords,
         domain_boost_keywords=domain_boost_keywords,
-        limit=limit or config.rank.final_limit,
+        limit=desired_limit,
     )
-    state = PublishHistoryStore(config.history.path)
-    if include_seen:
-        visible = ranked
-    else:
-        visible_ids = set(state.filter_new([paper.arxiv_id for paper in ranked]))
-        visible = [paper for paper in ranked if paper.arxiv_id in visible_ids]
     return {
         "topic": selected_topic,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "papers": [paper.to_dict() for paper in visible],
+        "papers": [paper.to_dict() for paper in ranked],
     }
